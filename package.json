@@ -1,0 +1,21 @@
+{
+  "name": "slex-ga",
+  "version": "1.0.0",
+  "description": "",
+  "main": "api/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "http-server lib -p 4000",
+    "build": "gulp"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "material-design-lite": "^1.1.3"
+  },
+  "devDependencies": {
+    "browserify": "^13.0.1",
+    "gulp": "^3.9.1",
+    "vinyl-source-stream": "^1.1.0"
+  }
+}
