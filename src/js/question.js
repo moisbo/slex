@@ -2,7 +2,7 @@ var Card = require('./card')
 
 var Question = function (data) {
     var content = `
-    ${data.text}
+    <h4>${data.text}</h4>
     `
     var action = `
     <div class="mdl-card__actions">

@@ -219,3 +219,6 @@ _:-ms-input-placeholder, :root .demo-graph {
 }
 /***********************************************************/
 
+.center {
+  text-align: center;
+}

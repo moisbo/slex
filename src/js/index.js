@@ -3,6 +3,7 @@
 var DB = require('./db')
 var Help = require('./help')
 var Ask = require('./ask')
+var Search = require('./search')
 
 var Render = require('./render')
 
@@ -69,17 +70,22 @@ delegate('#app', 'click', '#ask', (event) => {
 })
 
 delegate('#app', 'change', '#search', (event) => {    
-    if(event.target.value) {
-        firebase.database().ref('questions/').once((snapshot) => {
-        state.questions = snapshot.val() 
-        let results = []
-        Object.keys(state.questions).filter((el) => {            
-            if(state.questions[el].text.match(event.target.value)) {
-                results.push(state.questions)
-            }
-        })
-        Render.main(Search(results), document.querySelector('#main')) 
-        event.preventDefault() 
-        })
+    if(event.target.value) {        
+        let loading = '<div class="center mdl-spinner mdl-js-spinner is-active"></div>'
+        Render.main(loading, document.querySelector('#main'))
+        componentHandler.upgradeDom();
+
+        firebase.database().ref('questions/').once('value').then((snapshot) => {
+            state.questions = snapshot.val() 
+            //TODO: Make a real search server, because firebase can't search
+            let results = [] 
+            Object.keys(state.questions).filter((el) => {     
+                if(state.questions[el].text.toLowerCase().match(event.target.value.toLowerCase())) {     
+                    results.push(state.questions[el])
+                }
+            })
+            Render.main(Search(results), document.querySelector('#main')) 
+            event.preventDefault() 
+        })        
     }
 })
