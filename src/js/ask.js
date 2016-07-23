@@ -7,12 +7,12 @@ var Ask = function (data) {
         <i class="material-icons">add</i>
     </button>
     `
-    var action = `
+    var actions = `
     <div class="mdl-card__actions">
         <a href="#" class="mdl-button">Details</a>
     </div>
     `
-    return Card({content: content, action: action, title:'Ask A Question'})
+    return Card({content: content, actions: actions, title:'Ask A Question'})
 }
 
 module.exports = Ask;
