@@ -1,20 +1,30 @@
 'use strict';
 
-var DB = require('./db')
+//App view components
+var Header = require('./header')
+var Drawer = require('./drawer')
+var Main = require('./main')
+
+//View Templates
 var Help = require('./help')
 var Ask = require('./ask')
 var Search = require('./search')
 var Profile = require('./profile')
 var Teams = require('./teams')
+var Login = require('./login')
 
-var Render = require('./render')
+//View Controllers
+var LoginController = require('./loginController')
+var AnswerController = require('./answerController')
+var QuestionController = require('./questionController')
 
+//Default state
 var state = {
     header:{
         title: 'Q & A',
         menu: [
-            {name:'header 1'},
-            {name:'header 2'}
+            {id: 'myQuestions', name: 'My Questions'},
+            {id: 'myAnswers', name: 'My Answers'}
         ]
     },
     drawer:{
@@ -29,28 +39,22 @@ var state = {
         ],
         currentTeam: 'My Team'
     },
-    main:{
-        questions:[],
-        profile:{
-            user:{},
-            answers:[],
-            questions:[],
-            teams:[]
-        }
-    },
+    main: Ask(),
     profile:{
-        user:{name:'Moises', email:'m@m.com'},
+        user:{},
         teams:[
             {url:'',name:'something.com'},
             {url:'',name:'otherthing.com'}
         ]
-    }
+    },
+    questions:[]
 }
 
-var renderApp = function (data){
-    Render.header(data.header, document.querySelector('#header'))
-    Render.drawer(data.drawer, document.querySelector('#drawer'))
-    Render.main(Ask(), document.querySelector('#main'))
+var app = document.querySelector('#app')
+
+var renderApp = function (data, into) {   
+    into.innerHTML = [Header(data),Drawer(data),Main(data)].join('')  
+    window.componentHandler.upgradeDom();
 }
 
 var config = {
@@ -60,60 +64,110 @@ var config = {
     storageBucket: "slex-c2463.appspot.com",
 }
 
-renderApp(state)
+firebase.initializeApp(config)
+firebase.auth().onAuthStateChanged(function(user) {
+    state.profile.user = user
+    if(!state.profile.user) {
+        state.main = Login(state)
+        renderApp(state, app)
+    }
+})
 
-DB.init(config)
-DB.actions(state)
+//Click Page Views
 
-//Main Page Views
-
-delegate('#app', 'click', '#help', (event) => {    
-    Render.main(Help(), document.querySelector('#main')) 
+delegate('#app', 'click', '#help', (event) => {
     event.preventDefault()   
-    toggleDrawer();
+    state.main = Help() 
+    renderApp(state, app) 
 })
 
 delegate('#app', 'click', '#ask', (event) => {    
-    Render.main(Ask(), document.querySelector('#main')) 
-    event.preventDefault() 
-    toggleDrawer()
+    event.preventDefault()  
+    state.main = Ask() 
+    renderApp(state, app) 
 })
 
 delegate('#app', 'click', '#profile', (event) => {
-    Render.main(Profile(), document.querySelector('#main'))
     event.preventDefault()
-    toggleDrawer()
+    state.main = Profile(state) 
+    renderApp(state, app)
 })
 
 delegate('#app', 'click', '#teams', (event) => {
-    Render.main(Teams(state), document.querySelector('#main'))
     event.preventDefault()
-    toggleDrawer()
+    state.main = Teams(state) 
+    renderApp(state, app)
 })
 
-delegate('#app', 'change', '#search', (event) => {    
+delegate('#app', 'change', '#search', (event) => {   
+    event.preventDefault() 
     if(event.target.value) {        
         let loading = '<div class="center mdl-spinner mdl-js-spinner is-active"></div>'
-        Render.main(loading, document.querySelector('#main'))
-        componentHandler.upgradeDom();
+        state.main = loading
+        renderApp(state, app)
 
         firebase.database().ref('questions/').once('value').then((snapshot) => {
             state.questions = snapshot.val() 
             //TODO: Make a real search server, because firebase can't search
-            let results = [] 
+            let results = []            
             Object.keys(state.questions).filter((el) => {     
-                if(state.questions[el].text.toLowerCase().match(event.target.value.toLowerCase())) {     
+                if(state.questions[el].title.toLowerCase().match(event.target.value.toLowerCase())) {     
                     results.push(state.questions[el])
                 }
             })
-            Render.main(Search(results), document.querySelector('#main')) 
-            event.preventDefault()
-        })        
+            state.main = Search(state)
+            renderApp(state, app)     
+        })
     }
 })
 
-//TODO: Move to utils
+//Login
+delegate('#app', 'click', '#quickstart-sign-in', LoginController.toggleSignIn)
+delegate('#app', 'click', '#quickstart-sign-up', LoginController.handleSignUp)
+delegate('#app', 'click', '#quickstart-verify-email', LoginController.sendEmailVerification)
+delegate('#app', 'click', '#quickstart-password-reset', LoginController.sendPasswordReset)
 
+delegate('#app', 'click', '#sign-out', () => {
+    firebase.auth().signOut()
+})
+
+//TODO: Dont know if it is necesary
 function toggleDrawer () {
     document.querySelector('.mdl-layout').MaterialLayout.toggleDrawer()
+    document.querySelector('.mdl-layout__obfuscator').classList.toggle('is-visible')
 }
+
+//Actions
+
+delegate('#app', 'click', '#askButton', (event) => {
+    event.preventDefault()
+    var input = document.querySelector('#askQuery')
+    if(input && input.value) {        
+        console.log('writeNewQuestion: ' + input.value);
+        QuestionController.create(state.profile.user.uid, state.profile.user.email, input.value, input.value).then(()=>{
+            console.log('wroteNewQuestion');
+        })
+    }
+})
+delegate('#app', 'click', '#answerCreate', (event) => {
+    event.preventDefault()
+    AnswerController.create(state.profile.user.uid, event.target.dataset.id, '', '')
+    .then(() => {
+        return firebase.database().ref('questions/').once('value')        
+    }).then((snapshot)=>{
+        state.answers = snapshot.val() 
+        renderApp(state, app)
+    })
+})
+delegate('#app', 'click', '#answerButton', (event) => {
+    event.preventDefault()
+    var input = document.querySelector('#answerSave')
+    if(input && input.value) {        
+        QuestionController.create(state.profile.user.uid, input.dataset.id, input.value, input.value).then(()=>{
+            console.log('answerQuestion');
+        })
+    }
+})
+////
+
+renderApp(state, app)

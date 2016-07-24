@@ -5,13 +5,8 @@ var db = {
     init: (config) => {
         firebase.initializeApp(config)
     },
-    actions: (state) => {
-        delegate('#app', 'click', '#ask', (event) => {
-            var input = document.querySelector('#askQuery')
-            if(input && input.value){
-                firebase.database().ref('questions/').push({text: input.value, answered: false});
-            }
-        })
+    actions: (data) => {
+
         /*
         firebase.database().ref('questions/').on('value', (snapshot) => {
             state.questions = snapshot.val() 

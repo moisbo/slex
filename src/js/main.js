@@ -1,8 +1,10 @@
 var Main = function (data) {
-  return `        
+  return `     
+  <main id="main" class="mdl-layout__content mdl-color--grey-100">     
       <div class="demo-cards">
-        ${data}
+        ${data.main}
       </div>
+  </main>
   `
 }
 
