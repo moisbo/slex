@@ -8,24 +8,31 @@ var Profile = function (data) {
         content:`
         <div>
             <p>${data.profile.user.email}</p>
-            <p>3 Questions</p>
-            <p>1 Answer</p>
-        </div>`,
+            <p>Email Verified: ${data.profile.user.emailVerified ? 'yes' : 'no'}</p>
+            <p>${data.profile.user.displayName}</p>
+        </div>
+        `,
         actions:`
         <div class="mdl-card__actions">
             <a href="#" id="sign-out" class="mdl-button">Sign Out</a>
         </div>
         `
     }
-    var teams = `
-    <ul>
-        <li>Team 1</li>
-        <li>Team 2</li>
-    </ul>`
-
+    var teams = {
+        content:`
+        <div>
+            <p>Questions: ${data.numberQuestions}</p>
+            <p>Answers: ${data.numberAnswers}</p>        
+        </div>
+        `,
+        actions:`
+        <div class="mdl-card__actions">
+            <a href="#" id="sign-out" class="mdl-button"></a>
+        </div>`
+    }
     return `
-        ${Card({content:user.content, actions:user.actions, title:'Profile'})}
-        ${Card({content:teams, actions:'', title:'Qs'})}
+        ${Card({content: user.content, actions: user.actions, title:'Profile'})}
+        ${Card({content: teams.content, actions: teams.actions, title:'Activity'})}
     `
 }
 

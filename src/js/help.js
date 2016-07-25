@@ -2,7 +2,9 @@ var Card = require('./card')
 
 var Help = function (data) {
     var content = `
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
     <p>This is the help section</p>
+    </div>
     `
     var actions = `
     <div class="mdl-card__actions">

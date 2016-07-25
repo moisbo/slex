@@ -13,6 +13,16 @@ html, body {
 .demo-layout .demo-header .mdl-textfield .mdl-textfield__expandable-holder {
   bottom: 19px;
 }
+.mdl-card {
+  min-height: 196px;
+}
+.mdl-card .mdl-textfield{
+  width: 100%;
+}
+.mdl-card .mdl-card__suporting-text {
+  width: auto;
+}
+
 .demo-layout .mdl-layout__header .mdl-layout__drawer-button {
   color: rgba(0, 0, 0, 0.54);
 }
@@ -185,6 +195,9 @@ _:-ms-input-placeholder, :root .demo-graph {
   background-image: url('images/dog.png');
   background-position: 90% 100%;
   background-repeat: no-repeat;
+}
+.demo-cards .mdl-card__actions {
+    background-color: #37474F;
 }
 .demo-cards .mdl-card__actions a {
   color: #00BCD4;

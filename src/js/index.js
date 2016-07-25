@@ -200,4 +200,29 @@ delegate('#app', 'click', '#answerDeleteBtn', (event) => {
     })
 })
 
+/*
+These next two delegates fix a bug in Material Design Lite that when re-render the listener was removed
+Even with component.upgradeDom()
+*/
+delegate('#app', 'click', '.mdl-layout__drawer-button', (event) => {
+    var drawer = document.querySelector('.mdl-layout__drawer')
+    if(drawer){
+        drawer.classList.add('is-visible')
+    }
+    var obs = document.querySelector('.mdl-layout__obfuscator')
+    if(obs){
+        obs.classList.add('is-visible')
+    }
+})
+delegate('#app', 'click', '.mdl-layout__content', (event) => {
+    var drawer = document.querySelector('.mdl-layout__drawer')
+    if(drawer){
+        drawer.classList.remove('is-visible')
+    }
+    var obs = document.querySelector('.mdl-layout__obfuscator')
+    if(obs){
+        obs.classList.remove('is-visible')
+    }
+})
+
 renderApp(state, app)

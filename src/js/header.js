@@ -1,6 +1,9 @@
 var Header = function (data) {
     return `
     <header id="header" class="demo-header mdl-layout__header mdl-color--grey-100 mdl-color-text--grey-600">
+    <div class="mdl-js-button mdl-layout__drawer-button">
+        <i class="material-icons">menu</i>
+    </div>
     <div class="mdl-layout__header-row">
         <span class="mdl-layout-title">${data.header.title}</span>
         <div class="mdl-layout-spacer"></div>
