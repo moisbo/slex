@@ -1,6 +1,14 @@
 var AnswerController = {
+    get: (id) => {
+        return firebase.database().ref('/answers/' + id).once('value')
+    },
+    getByQuestion: (qid) => {
+        return firebase.database().ref('/answers/').orderByChild('qid').equalTo(qid).once('value')
+    },
     create: (uid, qid, title, body) => {
-        // A post entry.
+        return firebase.database().ref().child('/answers/').push().key
+    },
+    set: (id, uid, qid, title, body) => {
         var qData = {
             uid: uid,
             qid: qid,
@@ -8,23 +16,15 @@ var AnswerController = {
             title: title,
             starCount: 0
         }
-        var newQKey = firebase.database().ref().child('answers').push().key
+        return firebase.database().ref('/answers/' + id).set(qData)
+    },
+    update: (id, key, value) => {
         var updates = {};
-        updates['/answers/' + newQKey] = qData
-        return firebase.database().ref().update(updates)
+        updates[key] = value;
+        return firebase.database().ref('/answers/' + id).update(updates)
     },
-    update: (id, uid, qid, title, body) => {
-        var qData = {
-            uid: uid,
-            qid: qid,
-            body: body,
-            title: title,
-            starCount: 0
-        }
-        return firebase.database().ref('answers/' + id).set(qData)
-    },
-    delete: (id) => {
-        return firebase.database().ref('answers/' + id).remove()
+    remove: (id) => {
+        return firebase.database().ref('/answers/' + id).remove()
     },
 }
 

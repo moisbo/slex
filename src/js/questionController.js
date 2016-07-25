@@ -1,4 +1,10 @@
 var QuestionController = {
+    all: () => {
+        return firebase.database().ref('questions/').once('value')
+    },
+    get: (id) => {
+        return firebase.database().ref('/questions/' + id).once('value')
+    },
     create: (uid, email, title, body) => {
         // A post entry.
         var qData = {
@@ -21,10 +27,10 @@ var QuestionController = {
             title: title,
             starCount: 0
         }
-        return firebase.database().ref('questions/' + id).set(qData)
+        return firebase.database().ref('/questions/' + id).set(qData)
     },
-    delete: (id) => {
-        return firebase.database().ref('questions/' + id).remove()
+    remove: (id) => {
+        return firebase.database().ref('/questions/' + id).remove()
     },
 }
 

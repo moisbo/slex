@@ -17,6 +17,7 @@ var Login = require('./login')
 var LoginController = require('./loginController')
 var AnswerController = require('./answerController')
 var QuestionController = require('./questionController')
+var SearchController = require('./searchController')
 
 //Default state
 var state = {
@@ -47,13 +48,15 @@ var state = {
             {url:'',name:'otherthing.com'}
         ]
     },
-    questions:[]
+    questions:[],
+    search:[],
+    showAnswers: false
 }
 
 var app = document.querySelector('#app')
 
 var renderApp = function (data, into) {   
-    into.innerHTML = [Header(data),Drawer(data),Main(data)].join('')  
+    into.innerHTML = [Header(data), Drawer(data), Main(data)].join('')  
     window.componentHandler.upgradeDom();
 }
 
@@ -65,6 +68,7 @@ var config = {
 }
 
 firebase.initializeApp(config)
+
 firebase.auth().onAuthStateChanged(function(user) {
     state.profile.user = user
     if(!state.profile.user) {
@@ -72,8 +76,6 @@ firebase.auth().onAuthStateChanged(function(user) {
         renderApp(state, app)
     }
 })
-
-//Click Page Views
 
 delegate('#app', 'click', '#help', (event) => {
     event.preventDefault()   
@@ -102,11 +104,11 @@ delegate('#app', 'click', '#teams', (event) => {
 delegate('#app', 'change', '#search', (event) => {   
     event.preventDefault() 
     if(event.target.value) {        
-        let loading = '<div class="center mdl-spinner mdl-js-spinner is-active"></div>'
+        let loading = '<div class="mdl-spinner mdl-js-spinner is-active"></div>'
         state.main = loading
         renderApp(state, app)
-
-        firebase.database().ref('questions/').once('value').then((snapshot) => {
+        SearchController.all()
+        .then((snapshot) => {
             state.questions = snapshot.val() 
             //TODO: Make a real search server, because firebase can't search
             let results = []            
@@ -115,12 +117,27 @@ delegate('#app', 'change', '#search', (event) => {
                     results.push(state.questions[el])
                 }
             })
-            state.main = Search(state)
-            renderApp(state, app)     
+            state.main = Search(state, 'hide')
+            renderApp(state, app)    
         })
     }
 })
 
+delegate('#app', 'click', '#showQuestion', (event) => {
+    event.preventDefault()
+    QuestionController.get(event.target.dataset.id)
+    .then((snapshot) => {
+        let obj = {}
+        obj[event.target.dataset.id] = snapshot.val()
+        state.questions = obj
+        return AnswerController.getByQuestion(event.target.dataset.id)
+    })
+    .then((snapshot) => {
+        state.answers = snapshot.val()
+        state.main = Search(state, 'answer')
+        renderApp(state, app)
+    })
+})
 //Login
 delegate('#app', 'click', '#quickstart-sign-in', LoginController.toggleSignIn)
 delegate('#app', 'click', '#quickstart-sign-up', LoginController.handleSignUp)
@@ -130,15 +147,7 @@ delegate('#app', 'click', '#quickstart-password-reset', LoginController.sendPass
 delegate('#app', 'click', '#sign-out', () => {
     firebase.auth().signOut()
 })
-
-//TODO: Dont know if it is necesary
-function toggleDrawer () {
-    document.querySelector('.mdl-layout').MaterialLayout.toggleDrawer()
-    document.querySelector('.mdl-layout__obfuscator').classList.toggle('is-visible')
-}
-
-//Actions
-
+//Ask
 delegate('#app', 'click', '#askButton', (event) => {
     event.preventDefault()
     var input = document.querySelector('#askQuery')
@@ -149,25 +158,46 @@ delegate('#app', 'click', '#askButton', (event) => {
         })
     }
 })
+//Answers
 delegate('#app', 'click', '#answerCreate', (event) => {
     event.preventDefault()
-    AnswerController.create(state.profile.user.uid, event.target.dataset.id, '', '')
+    var qid = event.target.dataset.id
+    var key = AnswerController.create(state.profile.user.uid, qid, '', '')   
+    AnswerController.set(key, state.profile.user.uid, qid, '', '')              
     .then(() => {
-        return firebase.database().ref('questions/').once('value')        
-    }).then((snapshot)=>{
-        state.answers = snapshot.val() 
+        return AnswerController.get(key)
+    }).then((snapshot) => {
+        var qs = {}
+        qs[qid] = state.questions[qid]
+        state.questions = qs
+        var aS = {}
+        aS[key] = snapshot.val()
+        state.answers = aS
+        state.main = Search(state, 'edit')
         renderApp(state, app)
     })
 })
-delegate('#app', 'click', '#answerButton', (event) => {
+
+delegate('#app', 'click', '#answerEditBtn', (event) => {
     event.preventDefault()
-    var input = document.querySelector('#answerSave')
+    var input = document.querySelector('#answerEdit')
     if(input && input.value) {        
-        QuestionController.create(state.profile.user.uid, input.dataset.id, input.value, input.value).then(()=>{
+        AnswerController.update(input.dataset.id, 'title', input.value).then(() => {
             console.log('answerQuestion');
         })
     }
 })
-////
+
+delegate('#app', 'click', '#answerDeleteBtn', (event) => {
+    event.preventDefault()     
+    AnswerController.remove(event.target.dataset.id)
+    .then(() => {        
+        return AnswerController.getByQuestion(event.target.dataset.qid)
+    })
+    .then((snapshot) => {            
+        state.answers = snapshot.val()
+        renderApp(state, app)
+    })
+})
 
 renderApp(state, app)
