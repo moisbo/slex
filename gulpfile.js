@@ -12,7 +12,7 @@ gulp.task('build', function () {
     })
     .bundle()
     .pipe(source('app.js'))
-    .pipe(gulp.dest('lib/'));
+    .pipe(gulp.dest('dist/'));
 })
 
 gulp.task('watch', function () {
