@@ -14,7 +14,7 @@ html, body {
   bottom: 19px;
 }
 .mdl-card {
-  min-height: 196px;
+  min-height: 100px;
 }
 .mdl-card .mdl-textfield{
   width: 100%;
@@ -231,7 +231,6 @@ _:-ms-input-placeholder, :root .demo-graph {
           align-items: center;
 }
 /***********************************************************/
-
-.center {
+.center{
   text-align: center;
 }

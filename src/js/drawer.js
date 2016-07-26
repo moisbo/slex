@@ -1,4 +1,13 @@
 var Drawer = function (data) {
+    var menu = [
+      {id:'ask',icon:'home',name:'Ask A Question'}  ,          
+      {id:'browse',icon:'group_work',name:'Browse Questions'}
+    ]
+    if(data.profile.user){
+      menu.push({id:'profile',icon:'face',name:'My Profile'})
+    }else {
+      menu.push({id:'login',icon:'face',name:'Sing In'})
+    }
     return `
     <div id="drawer" class="demo-drawer mdl-layout__drawer mdl-color--blue-grey-900 mdl-color-text--blue-grey-50">
     <header class="demo-drawer-header">
@@ -21,7 +30,7 @@ var Drawer = function (data) {
       </div>
     </header>
     <nav class="demo-navigation mdl-navigation mdl-color--blue-grey-800">
-      ${data.drawer.menu.map((el) => {
+      ${menu.map((el) => {
         return `<a class="mdl-navigation__link" id="${el.id}" href=""><i class="mdl-color-text--blue-grey-400 material-icons" role="presentation">${el.icon}</i>${el.name}</a>`
       }).join('')}
       <div class="mdl-layout-spacer"></div>

@@ -1,5 +1,7 @@
 'use strict';
 
+var Config = require('./config')
+
 //App view components
 var Header = require('./header')
 var Drawer = require('./drawer')
@@ -18,63 +20,68 @@ var LoginController = require('./loginController')
 var AnswerController = require('./answerController')
 var QuestionController = require('./questionController')
 var SearchController = require('./searchController')
+var StackExchange = require('./stackExchange')
 
 //Default state
 var state = {
     header:{
         title: 'Q & A',
         menu: [
-            {id: 'myQuestions', name: 'My Questions'},
-            {id: 'myAnswers', name: 'My Answers'}
+            {id: 'sign-out-header', name: 'Sign Out'}
         ]
     },
-    drawer:{
-        menu:[
-            {id:'ask',icon:'home',name:'Ask A Question'},
-            {id:'profile',icon:'face',name:'My Profile'},
-            {id:'teams',icon:'group_work',name:'Teams'}
-        ],
-        teams:[
-            {url:'',name:'something.com'},
-            {url:'',name:'otherthing.com'}
-        ],
+    drawer:{        
+        teams:[],
         currentTeam: 'My Team'
     },
     main: Ask(),
     profile:{
         user:{},
         teams:[
-            {url:'',name:'something.com'},
-            {url:'',name:'otherthing.com'}
-        ]
+            {url:'',name:'myteam.com'},
+            {url:'',name:'myotherteam.com'}
+        ],
+        nuQuestions:0,
+        nuAnswers:0
     },
     questions:[],
     search:[],
-    showAnswers: false
+    stackExchange: []
 }
 
 var app = document.querySelector('#app')
 
 var renderApp = function (data, into) {   
-    into.innerHTML = [Header(data), Drawer(data), Main(data)].join('')  
+    into.innerHTML = [Header(data), Drawer(data), Main(data)].join('') 
     window.componentHandler.upgradeDom();
 }
-
-var config = {
-    apiKey: "AIzaSyDx8YPwfxB5O9USxtqPSTapfIr7jKiGjKM",
-    authDomain: "slex-c2463.firebaseapp.com",
-    databaseURL: "https://slex-c2463.firebaseio.com",
-    storageBucket: "slex-c2463.appspot.com",
+var renderLoading = function () {
+    let loading = `
+    <section class="center">
+    <div class="mdl-spinner mdl-js-spinner is-active"></div>
+    </section>
+    `
+    state.main = loading
+    renderApp(state, app)
 }
 
-firebase.initializeApp(config)
+firebase.initializeApp(Config.fb)
 
 firebase.auth().onAuthStateChanged(function(user) {
     state.profile.user = user
     if(!state.profile.user) {
         state.main = Login(state)
         renderApp(state, app)
+    }else{
+        state.main = Ask(state)
+        renderApp(state, app)
     }
+})
+
+delegate('#app', 'click', '#login', (event) => {
+    event.preventDefault()
+    state.main = Login(state)
+    renderApp(state, app)
 })
 
 delegate('#app', 'click', '#help', (event) => {
@@ -91,22 +98,40 @@ delegate('#app', 'click', '#ask', (event) => {
 
 delegate('#app', 'click', '#profile', (event) => {
     event.preventDefault()
-    state.main = Profile(state) 
-    renderApp(state, app)
+    renderLoading()
+    var aN = QuestionController.getByUser(state.profile.user.uid)
+    var qS = AnswerController.getByUser(state.profile.user.uid)
+    Promise.all([aN, qS]).then((res) => {
+        //Get Number of answers and question per user uid
+        state.profile.nuAnswers = res[0].numChildren()
+        state.profile.nuQuestions = res[1].numChildren()
+        state.main = Profile(state) 
+        renderApp(state, app)
+    })
+    .catch((error) => {
+        console.log(error);
+    })
+
 })
 
-delegate('#app', 'click', '#teams', (event) => {
+delegate('#app', 'click', '#browse', (event) => {
     event.preventDefault()
-    state.main = Teams(state) 
-    renderApp(state, app)
+    renderLoading()
+    SearchController.all()
+    .then((snapshot) => {
+        state.questions = snapshot.val()
+        state.main = Search(state, 'hide') 
+        renderApp(state, app)
+    })
+    .catch((error) => {
+        console.log(error);
+    })
 })
 
 delegate('#app', 'change', '#search', (event) => {   
     event.preventDefault() 
     if(event.target.value) {        
-        let loading = '<div class="mdl-spinner mdl-js-spinner is-active"></div>'
-        state.main = loading
-        renderApp(state, app)
+        renderLoading()
         SearchController.all()
         .then((snapshot) => {
             state.questions = snapshot.val() 
@@ -120,22 +145,48 @@ delegate('#app', 'change', '#search', (event) => {
             state.main = Search(state, 'hide')
             renderApp(state, app)    
         })
+        .catch((error) => {
+            console.log(error);
+        })
     }
 })
 
 delegate('#app', 'click', '#showQuestion', (event) => {
     event.preventDefault()
+    var question = {}
     QuestionController.get(event.target.dataset.id)
     .then((snapshot) => {
-        let obj = {}
-        obj[event.target.dataset.id] = snapshot.val()
-        state.questions = obj
+        question[event.target.dataset.id] = snapshot.val()
+        state.questions = question
         return AnswerController.getByQuestion(event.target.dataset.id)
     })
     .then((snapshot) => {
         state.answers = snapshot.val()
-        state.main = Search(state, 'answer')
+        state.main = Search(state, 'show')        
         renderApp(state, app)
+    })
+    .catch((error) => {
+        console.log(error);
+    })
+})
+delegate('#app', 'click', '#showStackExchange', (event) => {
+    var question = {}
+    QuestionController.get(event.target.dataset.id)
+    .then((snapshot) => {
+        question[event.target.dataset.id] = snapshot.val()
+        state.questions = question
+        return StackExchange.query(question.title)
+    })
+    .then((response) => {
+        return response.json()
+    })
+    .then((response) => {
+        state.stackExchange = response.items
+        state.main = Search(state, 'so')        
+        renderApp(state, app)
+    })
+    .catch((error) => {
+        console.log(error);
     })
 })
 //Login
@@ -147,14 +198,22 @@ delegate('#app', 'click', '#quickstart-password-reset', LoginController.sendPass
 delegate('#app', 'click', '#sign-out', () => {
     firebase.auth().signOut()
 })
+delegate('#app', 'click', '#sign-out-header', () => {
+    firebase.auth().signOut()
+})
 //Ask
 delegate('#app', 'click', '#askButton', (event) => {
     event.preventDefault()
     var input = document.querySelector('#askQuery')
-    if(input && input.value) {        
-        console.log('writeNewQuestion: ' + input.value);
-        QuestionController.create(state.profile.user.uid, state.profile.user.email, input.value, input.value).then(()=>{
-            console.log('wroteNewQuestion');
+    if(input && input.value) {    
+        renderLoading()    
+        QuestionController.create(state.profile.user.uid, state.profile.user.email, input.value, input.value)
+        .then(() => {
+            state.main = Ask(state)
+            renderApp(state, app)
+        })
+        .catch((error) => {
+            console.log(error);
         })
     }
 })
@@ -176,27 +235,61 @@ delegate('#app', 'click', '#answerCreate', (event) => {
         state.main = Search(state, 'edit')
         renderApp(state, app)
     })
+    .catch((error) => {
+        console.log(error);
+    })
 })
 
-delegate('#app', 'click', '#answerEditBtn', (event) => {
+delegate('#app', 'click', '.answerEditBtn', (event) => {
+    event.preventDefault()
+    var question = {}
+    var answer = {}
+    var input = event.target
+    AnswerController.get(input.dataset.id)
+    .then((snapshot) => {
+        answer[input.dataset.id] = snapshot.val()
+        return QuestionController.get(event.target.dataset.qid)
+    }).then((snapshot) => {
+        question[event.target.dataset.qid] = snapshot.val()
+        state.questions = question
+        state.answers = answer
+        state.main = Search(state, 'edit')
+        renderApp(state, app)
+    })
+    .catch((error) => {
+        console.log(error);
+    })
+})
+
+delegate('#app', 'click', '.answerSaveBtn', (event) => {
     event.preventDefault()
     var input = document.querySelector('#answerEdit')
-    if(input && input.value) {        
-        AnswerController.update(input.dataset.id, 'title', input.value).then(() => {
-            console.log('answerQuestion');
-        })
-    }
+    AnswerController.update(input.dataset.id, 'title', input.value)
+    .then(() => {
+        return AnswerController.getByQuestion(input.dataset.qid)
+    }).then((snapshot) => {
+        state.answers = snapshot.val()
+        state.main = Search(state, 'show')
+        renderApp(state, app)
+    })
+    .catch((error) => {
+        console.log(error);
+    })
 })
 
-delegate('#app', 'click', '#answerDeleteBtn', (event) => {
-    event.preventDefault()     
+delegate('#app', 'click', '.answerDeleteBtn', (event) => {
+    event.preventDefault()    
     AnswerController.remove(event.target.dataset.id)
-    .then(() => {        
+    .then(() => {     
         return AnswerController.getByQuestion(event.target.dataset.qid)
     })
-    .then((snapshot) => {            
+    .then((snapshot) => {               
         state.answers = snapshot.val()
+        state.main = Search(state, 'show')
         renderApp(state, app)
+    })
+    .catch((error) => {
+        console.log(error);
     })
 })
 
@@ -206,17 +299,17 @@ Even with component.upgradeDom()
 */
 delegate('#app', 'click', '.mdl-layout__drawer-button', (event) => {
     var drawer = document.querySelector('.mdl-layout__drawer')
-    if(drawer){
+    if(drawer) {
         drawer.classList.add('is-visible')
     }
     var obs = document.querySelector('.mdl-layout__obfuscator')
-    if(obs){
+    if(obs) {
         obs.classList.add('is-visible')
     }
 })
 delegate('#app', 'click', '.mdl-layout__content', (event) => {
     var drawer = document.querySelector('.mdl-layout__drawer')
-    if(drawer){
+    if(drawer) {
         drawer.classList.remove('is-visible')
     }
     var obs = document.querySelector('.mdl-layout__obfuscator')
@@ -224,5 +317,6 @@ delegate('#app', 'click', '.mdl-layout__content', (event) => {
         obs.classList.remove('is-visible')
     }
 })
+//End fix bug MDL
 
 renderApp(state, app)

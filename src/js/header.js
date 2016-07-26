@@ -22,7 +22,7 @@ var Header = function (data) {
         <ul class="mdl-menu mdl-js-menu mdl-js-ripple-effect mdl-menu--bottom-right" for="hdrbtn">
             ${data.header.menu.map( (el) => {
 	            return `<li class="mdl-menu__item" id="${el.id}" href="">${el.name}</li>`
-            }).join('')}            
+            }).join('')}
         </ul>
     </div>
     </header>

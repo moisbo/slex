@@ -5,6 +5,9 @@ var AnswerController = {
     getByQuestion: (qid) => {
         return firebase.database().ref('/answers/').orderByChild('qid').equalTo(qid).once('value')
     },
+    getByUser: (uid) => {
+        return firebase.database().ref('/answers/').orderByChild('uid').equalTo(uid).once('value')
+    },
     create: (uid, qid, title, body) => {
         return firebase.database().ref().child('/answers/').push().key
     },

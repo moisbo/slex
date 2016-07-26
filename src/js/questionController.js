@@ -5,6 +5,9 @@ var QuestionController = {
     get: (id) => {
         return firebase.database().ref('/questions/' + id).once('value')
     },
+    getByUser: (uid) => {
+        return firebase.database().ref('/questions/').orderByChild('uid').equalTo(uid).once('value')
+    },
     create: (uid, email, title, body) => {
         // A post entry.
         var qData = {

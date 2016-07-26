@@ -9,20 +9,21 @@ var Profile = function (data) {
         <div>
             <p>${data.profile.user.email}</p>
             <p>Email Verified: ${data.profile.user.emailVerified ? 'yes' : 'no'}</p>
-            <p>${data.profile.user.displayName}</p>
+            ${!data.profile.user.displayName ? '' : '<p>Name:' + data.profile.user.displayName + '</p>'}
         </div>
         `,
         actions:`
         <div class="mdl-card__actions">
             <a href="#" id="sign-out" class="mdl-button">Sign Out</a>
+            <a class="mdl-button" id="quickstart-verify-email" name="verify-email">Send Email Verification</a>
         </div>
         `
     }
     var teams = {
         content:`
         <div>
-            <p>Questions: ${data.numberQuestions}</p>
-            <p>Answers: ${data.numberAnswers}</p>        
+            <p>Questions: ${data.profile.nuQuestions}</p>
+            <p>Answers: ${data.profile.nuAnswers}</p>        
         </div>
         `,
         actions:`
