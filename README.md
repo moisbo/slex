@@ -46,8 +46,24 @@ Uses email Firebase authentication email
 
 ### Code
 
-- Material Design Lite for the layout
+- [Material Design Lite](https://getmdl.io/) for the layout Drawer, Buttons, Cards, Inputs
+- Browserify style code
+```javascript
+var Config = require('./config')
+
+//App view components
+var Header = require('./header')
+var Drawer = require('./drawer')
+var Main = require('./main')
+```
 - Uses state and render functions
+```javascript
+var renderApp = function (data, into) {
+    into.innerHTML = [Header(data), Drawer(data), Main(data)].join('') 
+    //Upgrade MDL Components
+    window.componentHandler.upgradeDom()
+}
+```
 - [card.js](./src/js/card.js) is the most important resource as is used in almost every component; for example: 
  ```javascript
 var Card = require('./card')
@@ -69,7 +85,7 @@ var Ask = function (data) {
  ```
 - App is organised in Index, View and ViewControllers (or ViewModels)
 
-![alt text](./docs/diagram.png "Diagram")
+![alt text](./doc/diagram.png "Diagram")
 
 
 ### Caveats
