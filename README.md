@@ -50,3 +50,9 @@ Uses email Firebase authentication email
 - Uses state and render functions
 - Card.js is the most important resource as in almost every component of the view uses a `Card()`
 - Code is divided with View and ViewControllers (or ViewModels)
+
+### TODO
+
+- Improve readability
+- Create search servers, email validation
+- Add teams!

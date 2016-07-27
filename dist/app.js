@@ -362,12 +362,14 @@ delegate('#app', 'change', '#search', (event) => {
         .then((snapshot) => {
             state.questions = snapshot.val() 
             //TODO: Make a real search server, because firebase can't search
-            let results = []
+            
+            var results = []
             Object.keys(state.questions).filter((el) => {
                 if(state.questions[el].title.toLowerCase().match(event.target.value.toLowerCase())) {
                     results.push(state.questions[el])
                 }
             })
+            state.questions = results
             state.main = Search(state, 'hide')
             renderApp(state, app)
         })
