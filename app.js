@@ -210,12 +210,14 @@ var Card = require('./card')
 var Help = function (data) {
     var content = `
     <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-    <p>This is the help section</p>
+        <p>Browse or search questions</p>
+        <p>Sign in to post questions and answers</p>
+        <p>Sing up with an email</p>
+        <p>Related button will show related questions on StackExchange</p>        
     </div>
     `
     var actions = `
     <div class="mdl-card__actions">
-        <a href="#" class="mdl-button">Details</a>
     </div>
     `
   return Card({content: content, actions: actions, title:'Help'})
@@ -265,8 +267,8 @@ var state = {
             {url:'',name:'myteam.com'},
             {url:'',name:'myotherteam.com'}
         ],
-        nuQuestions:0,
-        nuAnswers:0
+        nuQuestions: 0,
+        nuAnswers: 0
     },
     questions:[],
     search:[],
@@ -275,10 +277,10 @@ var state = {
 
 var app = document.querySelector('#app')
 
-var renderApp = function (data, into) {   
+var renderApp = function (data, into) {
     into.innerHTML = [Header(data), Drawer(data), Main(data)].join('') 
     //Upgrade MDL Components
-    window.componentHandler.upgradeDom();
+    window.componentHandler.upgradeDom()
 }
 
 var renderLoading = function () {
