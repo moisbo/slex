@@ -41,8 +41,8 @@ var state = {
             {url:'',name:'myteam.com'},
             {url:'',name:'myotherteam.com'}
         ],
-        nuQuestions:0,
-        nuAnswers:0
+        nuQuestions: 0,
+        nuAnswers: 0
     },
     questions:[],
     search:[],
@@ -51,10 +51,10 @@ var state = {
 
 var app = document.querySelector('#app')
 
-var renderApp = function (data, into) {   
+var renderApp = function (data, into) {
     into.innerHTML = [Header(data), Drawer(data), Main(data)].join('') 
     //Upgrade MDL Components
-    window.componentHandler.upgradeDom();
+    window.componentHandler.upgradeDom()
 }
 
 var renderLoading = function () {
