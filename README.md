@@ -40,7 +40,7 @@ Uses email Firebase authentication email
 ### Use
 
 - Modify config.js to add your own API keys
-- Compile code using browserify
+- Compile code in src/js directory using browserify
     `gulp`
 - And run with `npm start`
 
