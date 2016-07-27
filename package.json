@@ -5,9 +5,8 @@
   "main": "api/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "http-server lib -p 4000",
-    "build": "gulp",
-    "deploy": "cd dist && git add --all && git commit -m \"Release at $(date)\" && git push"
+    "start": "http-server dist -p 4000",
+    "build": "gulp"
   },
   "author": "",
   "license": "ISC",

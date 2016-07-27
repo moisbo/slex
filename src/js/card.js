@@ -6,7 +6,7 @@ var Card = function (data, type) {
                 <h4 class="mdl-cell mdl-cell--12-col">${data.title}</h4>
                 <div class="section__text mdl-cell mdl-cell--10-col-desktop mdl-cell--6-col-tablet mdl-cell--3-col-phone">
                     ${data.content}
-                </div>            
+                </div>
             </div>
             ${data.actions}
         </div>

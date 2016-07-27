@@ -19,7 +19,7 @@ var Teams = function (data) {
             return Card({content: content, actions: actions, title: team.name})
         }).join('')}
     `
-    
+
     return content
 }
 

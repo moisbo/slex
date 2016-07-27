@@ -8,7 +8,7 @@ gulp.task('build', function () {
     return browserify({
         entries: [ './src/js/index.js' ],
         extensions: [ '.js' ],
-        debug: false // Add sourcemaps
+        debug: false // True to add sourcemaps
     })
     .bundle()
     .pipe(source('app.js'))

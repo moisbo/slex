@@ -19,11 +19,13 @@ var AnswerController = {
             title: title,
             starCount: 0
         }
+
         return firebase.database().ref('/answers/' + id).set(qData)
     },
     update: (id, key, value) => {
         var updates = {};
         updates[key] = value;
+
         return firebase.database().ref('/answers/' + id).update(updates)
     },
     remove: (id) => {

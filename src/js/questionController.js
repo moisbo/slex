@@ -9,7 +9,6 @@ var QuestionController = {
         return firebase.database().ref('/questions/').orderByChild('uid').equalTo(uid).once('value')
     },
     create: (uid, email, title, body) => {
-        // A post entry.
         var qData = {
             uid: uid,
             author: email,

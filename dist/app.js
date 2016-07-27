@@ -57,11 +57,13 @@ var AnswerController = {
             title: title,
             starCount: 0
         }
+
         return firebase.database().ref('/answers/' + id).set(qData)
     },
     update: (id, key, value) => {
         var updates = {};
         updates[key] = value;
+
         return firebase.database().ref('/answers/' + id).update(updates)
     },
     remove: (id) => {
@@ -79,6 +81,7 @@ var Ask = function (data) {
     <input id="askQuery" class="mdl-textfield__input" type="text"/>
     </div>
     `
+
     var actions = `
     <div class="mdl-card__actions">
         <a href="#" id="askButton" class="mdl-button">Ask</a>
@@ -97,7 +100,7 @@ var Card = function (data, type) {
                 <h4 class="mdl-cell mdl-cell--12-col">${data.title}</h4>
                 <div class="section__text mdl-cell mdl-cell--10-col-desktop mdl-cell--6-col-tablet mdl-cell--3-col-phone">
                     ${data.content}
-                </div>            
+                </div>
             </div>
             ${data.actions}
         </div>
@@ -108,6 +111,7 @@ module.exports = Card;
 },{}],5:[function(require,module,exports){
 var Config = {
     stack:{
+        api:'https://api.stackexchange.com/2.2/questions?',
         site:'stackoverflow',
         key:'D*tDhJk*ZmPw2q8r9T*RjQ(('
     },
@@ -122,14 +126,18 @@ module.exports = Config
 },{}],6:[function(require,module,exports){
 var Drawer = function (data) {
     var menu = [
-      {id:'ask',icon:'home',name:'Ask A Question'}  ,          
       {id:'browse',icon:'group_work',name:'Browse Questions'}
     ]
+
     if(data.profile.user){
-      menu.push({id:'profile',icon:'face',name:'My Profile'})
+      menu.push(
+        {id:'ask',icon:'home',name:'Ask A Question'},
+        {id:'profile',icon:'face',name:'My Profile'}
+        )
     }else {
       menu.push({id:'login',icon:'face',name:'Sing In'})
     }
+
     return `
     <div id="drawer" class="demo-drawer mdl-layout__drawer mdl-color--blue-grey-900 mdl-color-text--blue-grey-50">
     <header class="demo-drawer-header">
@@ -246,7 +254,7 @@ var state = {
             {id: 'sign-out-header', name: 'Sign Out'}
         ]
     },
-    drawer:{        
+    drawer:{
         teams:[],
         currentTeam: 'My Team'
     },
@@ -269,8 +277,10 @@ var app = document.querySelector('#app')
 
 var renderApp = function (data, into) {   
     into.innerHTML = [Header(data), Drawer(data), Main(data)].join('') 
+    //Upgrade MDL Components
     window.componentHandler.upgradeDom();
 }
+
 var renderLoading = function () {
     let loading = `
     <section class="center">
@@ -301,27 +311,27 @@ delegate('#app', 'click', '#login', (event) => {
 })
 
 delegate('#app', 'click', '#help', (event) => {
-    event.preventDefault()   
-    state.main = Help() 
-    renderApp(state, app) 
+    event.preventDefault()
+    state.main = Help()
+    renderApp(state, app)
 })
 
-delegate('#app', 'click', '#ask', (event) => {    
-    event.preventDefault()  
-    state.main = Ask() 
-    renderApp(state, app) 
+delegate('#app', 'click', '#ask', (event) => {
+    event.preventDefault()
+    state.main = Ask()
+    renderApp(state, app)
 })
 
 delegate('#app', 'click', '#profile', (event) => {
     event.preventDefault()
     renderLoading()
-    var aN = QuestionController.getByUser(state.profile.user.uid)
-    var qS = AnswerController.getByUser(state.profile.user.uid)
+    var qS = QuestionController.getByUser(state.profile.user.uid)
+    var aN = AnswerController.getByUser(state.profile.user.uid)
     Promise.all([aN, qS]).then((res) => {
         //Get Number of answers and question per user uid
         state.profile.nuAnswers = res[0].numChildren()
         state.profile.nuQuestions = res[1].numChildren()
-        state.main = Profile(state) 
+        state.main = Profile(state)
         renderApp(state, app)
     })
     .catch((error) => {
@@ -335,8 +345,8 @@ delegate('#app', 'click', '#browse', (event) => {
     renderLoading()
     SearchController.all()
     .then((snapshot) => {
-        state.questions = snapshot.val()
-        state.main = Search(state, 'hide') 
+        state.questions = snapshot.val() || []
+        state.main = Search(state, 'hide')
         renderApp(state, app)
     })
     .catch((error) => {
@@ -344,22 +354,22 @@ delegate('#app', 'click', '#browse', (event) => {
     })
 })
 
-delegate('#app', 'change', '#search', (event) => {   
-    event.preventDefault() 
-    if(event.target.value) {        
+delegate('#app', 'change', '#search', (event) => {
+    event.preventDefault()
+    if(event.target.value) {
         renderLoading()
         SearchController.all()
         .then((snapshot) => {
             state.questions = snapshot.val() 
             //TODO: Make a real search server, because firebase can't search
-            let results = []            
-            Object.keys(state.questions).filter((el) => {     
-                if(state.questions[el].title.toLowerCase().match(event.target.value.toLowerCase())) {     
+            let results = []
+            Object.keys(state.questions).filter((el) => {
+                if(state.questions[el].title.toLowerCase().match(event.target.value.toLowerCase())) {
                     results.push(state.questions[el])
                 }
             })
             state.main = Search(state, 'hide')
-            renderApp(state, app)    
+            renderApp(state, app)
         })
         .catch((error) => {
             console.log(error);
@@ -378,33 +388,35 @@ delegate('#app', 'click', '#showQuestion', (event) => {
     })
     .then((snapshot) => {
         state.answers = snapshot.val()
-        state.main = Search(state, 'show')        
+        state.main = Search(state, 'show')
         renderApp(state, app)
     })
     .catch((error) => {
         console.log(error);
     })
 })
+
 delegate('#app', 'click', '#showStackExchange', (event) => {
     var question = {}
     QuestionController.get(event.target.dataset.id)
     .then((snapshot) => {
         question[event.target.dataset.id] = snapshot.val()
         state.questions = question
-        return StackExchange.query(question.title)
+        return StackExchange.query(question[event.target.dataset.id].title)
     })
     .then((response) => {
         return response.json()
     })
     .then((response) => {
         state.stackExchange = response.items
-        state.main = Search(state, 'so')        
+        state.main = Search(state, 'so')
         renderApp(state, app)
     })
     .catch((error) => {
         console.log(error);
     })
 })
+
 //Login
 delegate('#app', 'click', '#quickstart-sign-in', LoginController.toggleSignIn)
 delegate('#app', 'click', '#quickstart-sign-up', LoginController.handleSignUp)
@@ -414,15 +426,17 @@ delegate('#app', 'click', '#quickstart-password-reset', LoginController.sendPass
 delegate('#app', 'click', '#sign-out', () => {
     firebase.auth().signOut()
 })
+
 delegate('#app', 'click', '#sign-out-header', () => {
     firebase.auth().signOut()
 })
+
 //Ask
 delegate('#app', 'click', '#askButton', (event) => {
     event.preventDefault()
     var input = document.querySelector('#askQuery')
-    if(input && input.value) {    
-        renderLoading()    
+    if(input && input.value) {
+        renderLoading()
         QuestionController.create(state.profile.user.uid, state.profile.user.email, input.value, input.value)
         .then(() => {
             state.main = Ask(state)
@@ -433,12 +447,13 @@ delegate('#app', 'click', '#askButton', (event) => {
         })
     }
 })
+
 //Answers
 delegate('#app', 'click', '#answerCreate', (event) => {
     event.preventDefault()
     var qid = event.target.dataset.id
-    var key = AnswerController.create(state.profile.user.uid, qid, '', '')   
-    AnswerController.set(key, state.profile.user.uid, qid, '', '')              
+    var key = AnswerController.create(state.profile.user.uid, qid, '', '')
+    AnswerController.set(key, state.profile.user.uid, qid, '', '')
     .then(() => {
         return AnswerController.get(key)
     }).then((snapshot) => {
@@ -494,12 +509,12 @@ delegate('#app', 'click', '.answerSaveBtn', (event) => {
 })
 
 delegate('#app', 'click', '.answerDeleteBtn', (event) => {
-    event.preventDefault()    
+    event.preventDefault()
     AnswerController.remove(event.target.dataset.id)
-    .then(() => {     
+    .then(() => {
         return AnswerController.getByQuestion(event.target.dataset.qid)
     })
-    .then((snapshot) => {               
+    .then((snapshot) => {
         state.answers = snapshot.val()
         state.main = Search(state, 'show')
         renderApp(state, app)
@@ -562,102 +577,120 @@ var Login = function (data) {
 module.exports = Login
 },{}],11:[function(require,module,exports){
 
-var LoginController = {     
-  toggleSignIn: () => {
-    var messageLogin = document.querySelector('#messageLogin')
-    if (firebase.auth().currentUser) {
-      firebase.auth().signOut()
-    } else {
+var LoginController = {
+    toggleSignIn: () => {
+
+      var messageLogin = document.querySelector('#messageLogin')
+
+      if (firebase.auth().currentUser) {
+        firebase.auth().signOut()
+      } else {
+        var email = document.getElementById('email').value
+        var password = document.getElementById('password').value
+
+        if (email.length < 4) {
+          messageLogin.innerHTML = 'Please enter an email address.'
+          return
+        }
+
+        if (password.length < 4) {
+          messageLogin.innerHTML = 'Please enter a password.'
+          return
+        }
+
+        firebase.auth().signInWithEmailAndPassword(email, password)
+        .catch(function(error) {
+          var errorCode = error.code
+          var errorMessage = error.message
+
+          if (errorCode === 'auth/wrong-password') {
+            messageLogin.innerHTML = 'Wrong password.'
+          } else {
+            messageLogin.innerHTML = errorMessage
+          }
+
+          messageLogin.innerHTML = error
+          document.getElementById('quickstart-sign-in').disabled = false
+        })
+      }
+
+      document.getElementById('quickstart-sign-in').disabled = true;
+    },
+    handleSignUp: () => {
+
+      var messageLogin = document.querySelector('#messageLogin')
       var email = document.getElementById('email').value
       var password = document.getElementById('password').value
+
+      //TODO: Use real email validation
       if (email.length < 4) {
         messageLogin.innerHTML = 'Please enter an email address.'
         return
       }
+
       if (password.length < 4) {
         messageLogin.innerHTML = 'Please enter a password.'
-        return
+        return;
       }
-      firebase.auth().signInWithEmailAndPassword(email, password)
-      .catch(function(error) {
+      firebase.auth().createUserWithEmailAndPassword(email, password)
+      .catch((error) => {
         var errorCode = error.code
         var errorMessage = error.message
-        if (errorCode === 'auth/wrong-password') {
-          messageLogin.innerHTML = 'Wrong password.'
+
+        if (errorCode == 'auth/weak-password') {
+          messageLogin.innerHTML = 'The password is too weak.'
         } else {
           messageLogin.innerHTML = errorMessage
         }
         messageLogin.innerHTML = error
-        document.getElementById('quickstart-sign-in').disabled = false
-      })
-    }
-    document.getElementById('quickstart-sign-in').disabled = true;
-  },
-  handleSignUp: () => {
-    var messageLogin = document.querySelector('#messageLogin')
-    var email = document.getElementById('email').value
-    var password = document.getElementById('password').value
-    if (email.length < 4) {
-      messageLogin.innerHTML = 'Please enter an email address.'
-      return
-    }
-    if (password.length < 4) {
-      messageLogin.innerHTML = 'Please enter a password.'
-      return;
-    }
-    firebase.auth().createUserWithEmailAndPassword(email, password)
-    .catch((error) => {
-      var errorCode = error.code
-      var errorMessage = error.message
-      if (errorCode == 'auth/weak-password') {
-        messageLogin.innerHTML = 'The password is too weak.'
-      } else {
-        messageLogin.innerHTML = errorMessage
-      }
-      messageLogin.innerHTML = error
-    });
-  },
-  sendEmailVerification: () => {
-    var messageLogin = document.querySelector('#messageLogin')
-    firebase.auth().currentUser.sendEmailVerification()
-    .then(() => {
-      messageLogin.innerHTML = 'Email Verification Sent!'
-    })
-  },
-  sendPasswordReset: () => {
-    var messageLogin = document.querySelector('#messageLogin')
-    var email = document.getElementById('email').value
-    if(!email || email.length < 4){
-      messageLogin.innerHTML = 'Please provide an email'
-      return
-    } else{
-      firebase.auth().sendPasswordResetEmail(email)
+      });
+    },
+    sendEmailVerification: () => {
+
+      var messageLogin = document.querySelector('#messageLogin')
+      firebase.auth().currentUser.sendEmailVerification()
       .then(() => {
-        messageLogin.innerHTML = 'Password Reset Email Sent!'
-      }).catch((error) => {
-        var errorCode = error.code
-        var errorMessage = error.message
-        if (errorCode == 'auth/invalid-email') {
-          messageLogin.innerHTML(errorMessage)
-        } else if (errorCode == 'auth/user-not-found') {
-          messageLogin.innerHTML = errorMessage
-        }
-        messageLogin.innerHTML = error
+        messageLogin.innerHTML = 'Email Verification Sent!'
       })
+    },
+    sendPasswordReset: () => {
+
+      var messageLogin = document.querySelector('#messageLogin')
+      var email = document.getElementById('email').value
+
+      //TODO: Use real email validation
+      if(!email || email.length < 4){
+        messageLogin.innerHTML = 'Please provide an email'
+        return
+      } else{
+        firebase.auth().sendPasswordResetEmail(email)
+        .then(() => {
+          messageLogin.innerHTML = 'Password Reset Email Sent!'
+        }).catch((error) => {
+          var errorCode = error.code
+          var errorMessage = error.message
+
+          if (errorCode == 'auth/invalid-email') {
+            messageLogin.innerHTML(errorMessage)
+          } else if (errorCode == 'auth/user-not-found') {
+            messageLogin.innerHTML = errorMessage
+          }else {
+            messageLogin.innerHTML = error
+          }
+        })
+      }
     }
-  }    
-    
 }
 module.exports = LoginController
 },{}],12:[function(require,module,exports){
 var Main = function (data) {
-  return `     
-  <main id="main" class="mdl-layout__content mdl-color--grey-100">     
-      <div class="demo-cards">
-        ${data.main}
-      </div>
-  </main>
-  `
+    return `
+    <main id="main" class="mdl-layout__content mdl-color--grey-100">     
+        <div class="demo-cards">
+          ${data.main}
+        </div>
+    </main>
+    `
 }
 
 module.exports = Main
@@ -665,9 +698,6 @@ module.exports = Main
 var Card = require('./card')
 
 var Profile = function (data) {
-    //To render profile
-    //Receive details such as email, teams, number of questions, number of answers
-
     var user = {
         content:`
         <div>
@@ -683,6 +713,7 @@ var Profile = function (data) {
         </div>
         `
     }
+
     var teams = {
         content:`
         <div>
@@ -695,6 +726,7 @@ var Profile = function (data) {
             <a href="#" id="sign-out" class="mdl-button"></a>
         </div>`
     }
+
     return `
         ${Card({content: user.content, actions: user.actions, title:'Profile'})}
         ${Card({content: teams.content, actions: teams.actions, title:'Activity'})}
@@ -738,7 +770,6 @@ var QuestionController = {
         return firebase.database().ref('/questions/').orderByChild('uid').equalTo(uid).once('value')
     },
     create: (uid, email, title, body) => {
-        // A post entry.
         var qData = {
             uid: uid,
             author: email,
@@ -774,7 +805,7 @@ var Stack = require('./stack')
 
 var Search = function (data, option) {
     let content = ''
-    
+
     Object.keys(data.questions).forEach((el) => {
         content += Question(data.questions[el], el, data.profile)
     })
@@ -785,11 +816,12 @@ var Search = function (data, option) {
             content += Answer(data.answers[el], el, option, data.profile)
         })
     }
+
     //If option has 'so' show their answers
     if(data.stackExchange.length > 0 && option === 'so') {
         content += '<section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp">'
         content += '<ul class="demo-list-three mdl-list">'
-        data.stackExchange.forEach((q) => {             
+        data.stackExchange.forEach((q) => {
             content += Stack(q)
         })
         content += '</ul>'
@@ -803,7 +835,7 @@ module.exports = Search
 },{"./answer":1,"./question":14,"./stack":18}],17:[function(require,module,exports){
 var SearchController = {
     all: () => {
-        return firebase.database().ref('questions/').once('value')        
+        return firebase.database().ref('questions/').once('value')
     }
 }
 
@@ -832,13 +864,13 @@ var Config = require('./config')
 
 var StackExchange = {
     query: (q) => {
-        return fetch('http://api.stackexchange.com/2.2/questions?' +
+        return fetch(Config.stack.api +
                     'order=desc&sort=activity' +
                     '&site=' + Config.stack.site +
                     '&key=' + Config.stack.key +
                     '&q='+ q + 
                     '&accepted=True'
-                    )          
+                    )
     }
 }
 module.exports = StackExchange
@@ -864,7 +896,7 @@ var Teams = function (data) {
             return Card({content: content, actions: actions, title: team.name})
         }).join('')}
     `
-    
+
     return content
 }
 

@@ -1,5 +1,6 @@
 var Config = {
     stack:{
+        api:'https://api.stackexchange.com/2.2/questions?',
         site:'stackoverflow',
         key:'D*tDhJk*ZmPw2q8r9T*RjQ(('
     },

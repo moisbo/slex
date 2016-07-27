@@ -30,7 +30,7 @@ var state = {
             {id: 'sign-out-header', name: 'Sign Out'}
         ]
     },
-    drawer:{        
+    drawer:{
         teams:[],
         currentTeam: 'My Team'
     },
@@ -53,8 +53,10 @@ var app = document.querySelector('#app')
 
 var renderApp = function (data, into) {   
     into.innerHTML = [Header(data), Drawer(data), Main(data)].join('') 
+    //Upgrade MDL Components
     window.componentHandler.upgradeDom();
 }
+
 var renderLoading = function () {
     let loading = `
     <section class="center">
@@ -85,27 +87,27 @@ delegate('#app', 'click', '#login', (event) => {
 })
 
 delegate('#app', 'click', '#help', (event) => {
-    event.preventDefault()   
-    state.main = Help() 
-    renderApp(state, app) 
+    event.preventDefault()
+    state.main = Help()
+    renderApp(state, app)
 })
 
-delegate('#app', 'click', '#ask', (event) => {    
-    event.preventDefault()  
-    state.main = Ask() 
-    renderApp(state, app) 
+delegate('#app', 'click', '#ask', (event) => {
+    event.preventDefault()
+    state.main = Ask()
+    renderApp(state, app)
 })
 
 delegate('#app', 'click', '#profile', (event) => {
     event.preventDefault()
     renderLoading()
-    var aN = QuestionController.getByUser(state.profile.user.uid)
-    var qS = AnswerController.getByUser(state.profile.user.uid)
+    var qS = QuestionController.getByUser(state.profile.user.uid)
+    var aN = AnswerController.getByUser(state.profile.user.uid)
     Promise.all([aN, qS]).then((res) => {
         //Get Number of answers and question per user uid
         state.profile.nuAnswers = res[0].numChildren()
         state.profile.nuQuestions = res[1].numChildren()
-        state.main = Profile(state) 
+        state.main = Profile(state)
         renderApp(state, app)
     })
     .catch((error) => {
@@ -119,8 +121,8 @@ delegate('#app', 'click', '#browse', (event) => {
     renderLoading()
     SearchController.all()
     .then((snapshot) => {
-        state.questions = snapshot.val()
-        state.main = Search(state, 'hide') 
+        state.questions = snapshot.val() || []
+        state.main = Search(state, 'hide')
         renderApp(state, app)
     })
     .catch((error) => {
@@ -128,22 +130,22 @@ delegate('#app', 'click', '#browse', (event) => {
     })
 })
 
-delegate('#app', 'change', '#search', (event) => {   
-    event.preventDefault() 
-    if(event.target.value) {        
+delegate('#app', 'change', '#search', (event) => {
+    event.preventDefault()
+    if(event.target.value) {
         renderLoading()
         SearchController.all()
         .then((snapshot) => {
             state.questions = snapshot.val() 
             //TODO: Make a real search server, because firebase can't search
-            let results = []            
-            Object.keys(state.questions).filter((el) => {     
-                if(state.questions[el].title.toLowerCase().match(event.target.value.toLowerCase())) {     
+            let results = []
+            Object.keys(state.questions).filter((el) => {
+                if(state.questions[el].title.toLowerCase().match(event.target.value.toLowerCase())) {
                     results.push(state.questions[el])
                 }
             })
             state.main = Search(state, 'hide')
-            renderApp(state, app)    
+            renderApp(state, app)
         })
         .catch((error) => {
             console.log(error);
@@ -162,33 +164,35 @@ delegate('#app', 'click', '#showQuestion', (event) => {
     })
     .then((snapshot) => {
         state.answers = snapshot.val()
-        state.main = Search(state, 'show')        
+        state.main = Search(state, 'show')
         renderApp(state, app)
     })
     .catch((error) => {
         console.log(error);
     })
 })
+
 delegate('#app', 'click', '#showStackExchange', (event) => {
     var question = {}
     QuestionController.get(event.target.dataset.id)
     .then((snapshot) => {
         question[event.target.dataset.id] = snapshot.val()
         state.questions = question
-        return StackExchange.query(question.title)
+        return StackExchange.query(question[event.target.dataset.id].title)
     })
     .then((response) => {
         return response.json()
     })
     .then((response) => {
         state.stackExchange = response.items
-        state.main = Search(state, 'so')        
+        state.main = Search(state, 'so')
         renderApp(state, app)
     })
     .catch((error) => {
         console.log(error);
     })
 })
+
 //Login
 delegate('#app', 'click', '#quickstart-sign-in', LoginController.toggleSignIn)
 delegate('#app', 'click', '#quickstart-sign-up', LoginController.handleSignUp)
@@ -198,15 +202,17 @@ delegate('#app', 'click', '#quickstart-password-reset', LoginController.sendPass
 delegate('#app', 'click', '#sign-out', () => {
     firebase.auth().signOut()
 })
+
 delegate('#app', 'click', '#sign-out-header', () => {
     firebase.auth().signOut()
 })
+
 //Ask
 delegate('#app', 'click', '#askButton', (event) => {
     event.preventDefault()
     var input = document.querySelector('#askQuery')
-    if(input && input.value) {    
-        renderLoading()    
+    if(input && input.value) {
+        renderLoading()
         QuestionController.create(state.profile.user.uid, state.profile.user.email, input.value, input.value)
         .then(() => {
             state.main = Ask(state)
@@ -217,12 +223,13 @@ delegate('#app', 'click', '#askButton', (event) => {
         })
     }
 })
+
 //Answers
 delegate('#app', 'click', '#answerCreate', (event) => {
     event.preventDefault()
     var qid = event.target.dataset.id
-    var key = AnswerController.create(state.profile.user.uid, qid, '', '')   
-    AnswerController.set(key, state.profile.user.uid, qid, '', '')              
+    var key = AnswerController.create(state.profile.user.uid, qid, '', '')
+    AnswerController.set(key, state.profile.user.uid, qid, '', '')
     .then(() => {
         return AnswerController.get(key)
     }).then((snapshot) => {
@@ -278,12 +285,12 @@ delegate('#app', 'click', '.answerSaveBtn', (event) => {
 })
 
 delegate('#app', 'click', '.answerDeleteBtn', (event) => {
-    event.preventDefault()    
+    event.preventDefault()
     AnswerController.remove(event.target.dataset.id)
-    .then(() => {     
+    .then(() => {
         return AnswerController.getByQuestion(event.target.dataset.qid)
     })
-    .then((snapshot) => {               
+    .then((snapshot) => {
         state.answers = snapshot.val()
         state.main = Search(state, 'show')
         renderApp(state, app)

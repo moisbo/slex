@@ -6,6 +6,7 @@ var Ask = function (data) {
     <input id="askQuery" class="mdl-textfield__input" type="text"/>
     </div>
     `
+
     var actions = `
     <div class="mdl-card__actions">
         <a href="#" id="askButton" class="mdl-button">Ask</a>

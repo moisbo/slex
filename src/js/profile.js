@@ -1,9 +1,6 @@
 var Card = require('./card')
 
 var Profile = function (data) {
-    //To render profile
-    //Receive details such as email, teams, number of questions, number of answers
-
     var user = {
         content:`
         <div>
@@ -19,6 +16,7 @@ var Profile = function (data) {
         </div>
         `
     }
+
     var teams = {
         content:`
         <div>
@@ -31,6 +29,7 @@ var Profile = function (data) {
             <a href="#" id="sign-out" class="mdl-button"></a>
         </div>`
     }
+
     return `
         ${Card({content: user.content, actions: user.actions, title:'Profile'})}
         ${Card({content: teams.content, actions: teams.actions, title:'Activity'})}
