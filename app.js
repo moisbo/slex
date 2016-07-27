@@ -363,10 +363,10 @@ delegate('#app', 'change', '#search', (event) => {
             state.questions = snapshot.val() 
             //TODO: Make a real search server, because firebase can't search
             
-            var results = []
+            var results = {}
             Object.keys(state.questions).filter((el) => {
                 if(state.questions[el].title.toLowerCase().match(event.target.value.toLowerCase())) {
-                    results.push(state.questions[el])
+                    results[el] = state.questions[el]
                 }
             })
             state.questions = results
