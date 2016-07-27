@@ -2,7 +2,7 @@
 
 A sort of Hey Slack meet StackExchange
 
-[https://moisbo.github.io/slex]
+https://moisbo.github.io/slex
 
 ### Details 
 
